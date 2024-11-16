@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">xAI Hello World</string>
+    <string name="title_activity_main">xAI Main</string>
 </resources>
