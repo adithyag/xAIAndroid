@@ -9,7 +9,7 @@ activityCompose = "1.9.3"
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
 # Material 3
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-# Previous Support
+# Preview Support
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 # Compose Activity
