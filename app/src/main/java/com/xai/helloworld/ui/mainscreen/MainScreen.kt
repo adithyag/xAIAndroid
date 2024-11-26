@@ -1,4 +1,4 @@
-package com.xai.helloworld.ui
+package com.xai.helloworld.ui.mainscreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -21,14 +21,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.xai.helloworld.Message
-import com.xai.helloworld.Role
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
 
 @Composable
 internal fun MainScreen(
-    messages: List<Message>,
-    onUserMessage: (String) -> Unit,
+    viewModel: MainScreenViewModel,
 ) {
     XAIHelloWorldTheme {
         Column(
@@ -43,11 +40,11 @@ internal fun MainScreen(
                     .weight(1f),
                 reverseLayout = true,
             ) {
-                items(messages.asReversed(), key = Message::id) {
+                items(viewModel.messages.asReversed(), key = Message::id) {
                     ChatMessage(it)
                 }
             }
-            ChatInput(onUserMessage)
+            ChatInput(viewModel::onUserMessage)
         }
     }
 }
@@ -99,10 +96,10 @@ private fun ChatInput(onUserMessage: (String) -> Unit) {
 @Preview(showBackground = true, device = "spec:width=480dp,height=1005dp")
 @Composable
 fun MainScreenPreview() {
-    val messages = listOf(
-        Message("Hello World"),
-        Message("How are you?", Role.Assistant),
-        Message("I'm fine, thank you!"),
-    )
-    MainScreen(messages) {}
+    val viewModel = MainScreenViewModel().apply {
+        onUserMessage("Hello World")
+        onUserMessage("How are you?")
+        onUserMessage("I'm fine, thank you!")
+    }
+    MainScreen(viewModel)
 }
