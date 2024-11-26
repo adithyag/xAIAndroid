@@ -1,7 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.ktorfit)
+}
+
+
+fun getApiKey(): String {
+    val xaiProperties = rootProject.file("api.properties")
+    val properties = Properties().apply {
+        load(xaiProperties.inputStream())
+    }
+    return properties.getProperty("API_KEY")
 }
 
 android {
@@ -10,6 +24,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     defaultConfig {
@@ -20,6 +35,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_KEY", getApiKey())
     }
 
     buildTypes {
@@ -51,4 +67,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     // Compose Activity
     implementation(libs.androidx.activity.compose)
+    // Ktorfit
+    implementation(libs.ktorfit.lib)
+    // Ktor Android Client
+    implementation(libs.ktor.android)
+    implementation(libs.ktor.auth)
+    implementation(libs.ktor.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.logging)
 }

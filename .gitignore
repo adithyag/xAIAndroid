@@ -40,3 +40,6 @@ _sandbox
 
 # Android Studio captures folder
 captures/
+
+# Local secrets
+/api.properties
