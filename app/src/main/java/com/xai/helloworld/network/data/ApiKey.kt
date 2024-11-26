@@ -10,9 +10,11 @@ import kotlinx.serialization.Serializable
  * @property apiKeyBlocked blocked status of the api key
  * @property apiKeyDisabled disabled status of the api key
  * @property apiKeyId id of the api key
- * @property createTime ISO 8061 formatted api key creation time; ex- 2024-11-22T19:41:30.583654Z
+ * @property createTime ISO 8061 formatted api key creation time
+ * ex- 2024-11-22T19:41:30.583654Z
  * @property modifiedBy id of the user who modified the api key
- * @property modifyTime ISO 8061 formatted api key modification time; ex- 2024-11-22T19:41:30.583654Z
+ * @property modifyTime ISO 8061 formatted api key modification time
+ * ex- 2024-11-22T19:41:30.583654Z
  * @property name name of the api key
  * @property redactedApiKey redacted version of the api key
  * @property teamBlocked blocked status of the team

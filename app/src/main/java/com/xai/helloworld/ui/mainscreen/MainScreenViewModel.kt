@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.xai.helloworld.network.data.CompletionsRequest
 import com.xai.helloworld.network.getXAiApi
 import kotlinx.coroutines.launch
 
@@ -20,7 +21,13 @@ class MainScreenViewModel : ViewModel() {
     }
 
     fun onUserMessage(msg: String) {
-        messages += Message(msg)
+        val newMessage = Message(msg, pending = true)
+        messages += newMessage
+        viewModelScope.launch {
+            val completionsResponse = xAiApi.getCompletions(CompletionsRequest(prompt = msg))
+            newMessage.pending = false
+            messages += Message(completionsResponse.choices.first().text, Role.Assistant)
+        }
     }
 
 }
@@ -35,7 +42,7 @@ data class Message(
     val msg: String,
     val role: Role = Role.User,
     val id: Long = Companion.id++,
-    val pending: Boolean = true
+    var pending: Boolean = true
 ) {
     companion object {
         var id = 0L
