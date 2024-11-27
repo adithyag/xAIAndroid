@@ -10,3 +10,7 @@ https://docs.x.ai/api/endpoints#completions
 ## v1/language-models
 https://docs.x.ai/api/endpoints#list-language-models
 * Response is not documented
+
+## v1/language-models/{model-id}
+https://docs.x.ai/api/endpoints#get-language-model
+* Document is wrong as it states embedding model but it is actually for language model

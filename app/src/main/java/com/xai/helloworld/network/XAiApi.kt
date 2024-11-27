@@ -18,9 +18,18 @@ interface XAiApi {
     @GET("api-key")
     suspend fun getApiKeyInfo(): ApiKeyResponse
 
+    /**
+     * List all language models available. See [LanguageModelsResponse]
+     */
     @GET("language-models")
     suspend fun getLanguageModels(): LanguageModelsResponse
 
+    /**
+     * Get information about a language model using its ID.
+     *
+     * @param modelId The Id of model. It can be retrieved from [getLanguageModels]
+     * @return
+     */
     @GET("language-models/{modelId}")
     suspend fun getLanguageModel(@Path modelId: String): LanguageModel
 
