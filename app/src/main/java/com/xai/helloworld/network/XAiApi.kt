@@ -1,6 +1,8 @@
 package com.xai.helloworld.network
 
 import com.xai.helloworld.network.data.ApiKeyResponse
+import com.xai.helloworld.network.data.ChatCompletionsRequest
+import com.xai.helloworld.network.data.ChatCompletionsResponse
 import com.xai.helloworld.network.data.CompletionsRequest
 import com.xai.helloworld.network.data.CompletionsResponse
 import com.xai.helloworld.network.data.LanguageModel
@@ -60,4 +62,11 @@ interface XAiApi {
      */
     @POST("completions")
     suspend fun getCompletions(@Body completionRequest: CompletionsRequest): CompletionsResponse
+
+    /**
+     * Create a language model response for a given chat conversation. This endpoint is compatible
+     * with the OpenAI API.
+     */
+    @POST("chat/completions")
+    suspend fun getChatCompletions(@Body chatCompletionRequest: ChatCompletionsRequest): ChatCompletionsResponse
 }

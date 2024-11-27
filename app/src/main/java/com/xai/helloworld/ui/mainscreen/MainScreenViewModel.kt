@@ -6,53 +6,43 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xai.helloworld.network.XAiApi
-import com.xai.helloworld.network.data.CompletionsRequest
+import com.xai.helloworld.network.data.ChatCompletionsRequest
+import com.xai.helloworld.network.data.MessageRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.xai.helloworld.network.data.Message as MessageData
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() {
     internal var messages: List<Message> by mutableStateOf(emptyList())
-
-    init {
-        with(viewModelScope) {
-//            launch {
-//                val apiKeyInfo = xAiApi.getApiKeyInfo()
-//                messages += Message(apiKeyInfo.toString())
-//            }
-//            launch {
-//                val languageModels = xAiApi.getLanguageModels()
-//                messages += Message(languageModels.toString())
-//            }
-//            launch {
-//                val languageModel = xAiApi.getLanguageModel("grok-beta")
-//                messages += Message(languageModel.toString())
-//            }
-            launch {
-                val models = xAiApi.getModels()
-                messages += Message(models.toString())
-            }
-            launch {
-                val model = xAiApi.getModel("grok-beta")
-                messages += Message(model.toString())
-            }
-        }
-    }
+    private val systemMessage = MessageData(
+        role = MessageRole.SYSTEM,
+        content = "You are Grok, a helpful assistant."
+    )
 
     fun onUserMessage(msg: String) {
         val newMessage = Message(msg, pending = true)
         messages += newMessage
         viewModelScope.launch {
-            val completionsResponse = xAiApi.getCompletions(CompletionsRequest(prompt = msg))
+            val request = createChatCompletionRequest(messages)
+            val response = xAiApi.getChatCompletions(request)
             newMessage.pending = false
-            messages += Message(completionsResponse.choices.first().text, Role.Assistant)
+            onModelResponse(response.choices.first().message.content.toString())
         }
+    }
+
+    fun onModelResponse(response: String) {
+        messages += Message(response, Role.Assistant)
+    }
+
+    private fun createChatCompletionRequest(messages: List<Message>): ChatCompletionsRequest {
+        val messages = listOf(systemMessage) + messages.map { it.toMessageData() }
+        return ChatCompletionsRequest(messages = messages)
     }
 }
 
 enum class Role {
-    System,
     Assistant,
     User
 }
@@ -61,9 +51,17 @@ data class Message(
     val msg: String,
     val role: Role = Role.User,
     val id: Long = Companion.id++,
-    var pending: Boolean = true
+    var pending: Boolean = false
 ) {
     companion object {
         var id = 0L
     }
 }
+
+private fun Message.toMessageData() = MessageData(
+    role = when (role) {
+        Role.Assistant -> MessageRole.ASSISTANT
+        Role.User -> MessageRole.USER
+    },
+    content = msg
+)

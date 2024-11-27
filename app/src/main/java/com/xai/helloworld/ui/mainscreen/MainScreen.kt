@@ -53,9 +53,11 @@ private fun ChatMessage(message: Message) {
         modifier = Modifier.Companion
             .background(
                 when (message.role) {
-                    Role.System -> Color.Companion.Blue
-                    Role.Assistant -> Color.Companion.Red
-                    Role.User -> Color.Companion.Green
+                    Role.Assistant -> Color.Companion.Cyan
+                    Role.User -> {
+                        if (message.pending) Color.Companion.Gray
+                        else Color.Companion.Yellow
+                    }
                 }
             )
             .fillMaxWidth(),

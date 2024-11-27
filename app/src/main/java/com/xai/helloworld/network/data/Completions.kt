@@ -123,25 +123,11 @@ data class CompletionsRequest(
 }
 
 /**
- * Stream options. See [CompletionsRequest.streamOptions]
- *
- * @property includeUsage If set, an additional chunk will be streamed before the data: [DONE]
- * message. The usage field on this chunk shows the token usage statistics for the entire request,
- * and the choices field will always be an empty array. All other chunks will also include a usage
- * field, but with a null value.
- */
-@Serializable
-data class StreamOptions(
-    @SerialName("include_usage")
-    val includeUsage: Boolean? = null,
-)
-
-/**
  * Completions response. See [com.xai.helloworld.network.XAiApi.getCompletions]
  *
  * @property id A unique identifier for the completion.
- * @property choices The list of completion choices the model generated for the input prompt. See
- * [Choice]
+ * @property completionChoices The list of completion choices the model generated for the input prompt. See
+ * [CompletionChoice]
  * @property created The Unix timestamp (in seconds) of when the completion was created.
  * @property model The model used for completion.
  * @property systemFingerprint This fingerprint represents the backend configuration that the model
@@ -153,7 +139,7 @@ data class StreamOptions(
 @Serializable
 data class CompletionsResponse(
     val id: String,
-    val choices: List<Choice>,
+    val completionChoices: List<CompletionChoice>,
     val created: Long,
     val model: String,
     @SerialName("system_fingerprint")
@@ -174,52 +160,9 @@ data class CompletionsResponse(
  * @property text a completion response for the prompt
  */
 @Serializable
-data class Choice(
+data class CompletionChoice(
     @SerialName("finish_reason")
     val finishReason: String,
     val index: Int,
     val text: String,
 )
-
-/**
- * Usage statistics for the completion request. See [CompletionsResponse.usage]
- *
- * @property completionTokens Number of tokens in the generated completion.
- * @property promptTokens Number of tokens in the prompt.
- * @property totalTokens Total number of tokens used in the request (prompt + completion).
- * @property promptTokensDetails Breakdown of tokens used in the prompt. See [PromptTokensDetails]
- * @constructor Create empty Usage
- */
-@Serializable
-data class Usage(
-    @SerialName("completion_tokens")
-    val completionTokens: Int,
-    @SerialName("prompt_tokens")
-    val promptTokens: Int,
-    @SerialName("total_tokens")
-    val totalTokens: Int,
-    @SerialName("prompt_tokens_details")
-    val promptTokensDetails: PromptTokensDetails,
-)
-
-/**
- * Breakdown of tokens used in the prompt.
- *
- * @property audioTokens Audio input tokens present in the prompt.
- * @property cachedTokens Cached tokens present in the prompt.
- * @property imageTokens
- * @property textTokens
- * @constructor Create empty Prompt tokens details
- */
-@Serializable
-data class PromptTokensDetails(
-    @SerialName("audio_tokens")
-    val audioTokens: Int,
-    @SerialName("cached_tokens")
-    val cachedTokens: Int,
-    @SerialName("image_tokens")
-    val imageTokens: Int,
-    @SerialName("text_tokens")
-    val textTokens: Int
-)
-
