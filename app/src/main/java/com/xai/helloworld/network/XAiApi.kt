@@ -3,6 +3,7 @@ package com.xai.helloworld.network
 import com.xai.helloworld.network.data.ApiKeyResponse
 import com.xai.helloworld.network.data.CompletionsRequest
 import com.xai.helloworld.network.data.CompletionsResponse
+import com.xai.helloworld.network.data.LanguageModelsResponse
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
@@ -14,6 +15,9 @@ interface XAiApi {
      */
     @GET("api-key")
     suspend fun getApiKeyInfo(): ApiKeyResponse
+
+    @GET("language-models")
+    suspend fun getLanguageModels(): LanguageModelsResponse
 
     /**
      * Create a language model response for a given prompt. This endpoint is compatible with the

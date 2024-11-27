@@ -20,6 +20,10 @@ class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() 
             val apiKeyInfo = xAiApi.getApiKeyInfo()
             messages += Message(apiKeyInfo.toString())
         }
+        viewModelScope.launch {
+            val languageModels = xAiApi.getLanguageModels()
+            messages += Message(languageModels.toString())
+        }
     }
 
     fun onUserMessage(msg: String) {

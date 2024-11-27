@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Api key response
+ * Api key response. See [com.xai.helloworld.network.XAiApi.getApiKeyInfo]
  *
  * @property acls access control list for the api key; ex -"api-key:endpoint:*", "api-key:model:*",
  * @property apiKeyBlocked blocked status of the api key
