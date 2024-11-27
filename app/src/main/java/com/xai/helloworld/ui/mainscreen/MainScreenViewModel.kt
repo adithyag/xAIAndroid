@@ -17,17 +17,25 @@ class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() 
 
     init {
         with(viewModelScope) {
+//            launch {
+//                val apiKeyInfo = xAiApi.getApiKeyInfo()
+//                messages += Message(apiKeyInfo.toString())
+//            }
+//            launch {
+//                val languageModels = xAiApi.getLanguageModels()
+//                messages += Message(languageModels.toString())
+//            }
+//            launch {
+//                val languageModel = xAiApi.getLanguageModel("grok-beta")
+//                messages += Message(languageModel.toString())
+//            }
             launch {
-                val apiKeyInfo = xAiApi.getApiKeyInfo()
-                messages += Message(apiKeyInfo.toString())
+                val models = xAiApi.getModels()
+                messages += Message(models.toString())
             }
             launch {
-                val languageModels = xAiApi.getLanguageModels()
-                messages += Message(languageModels.toString())
-            }
-            launch {
-                val languageModel = xAiApi.getLanguageModel("grok-beta")
-                messages += Message(languageModel.toString())
+                val model = xAiApi.getModel("grok-beta")
+                messages += Message(model.toString())
             }
         }
     }

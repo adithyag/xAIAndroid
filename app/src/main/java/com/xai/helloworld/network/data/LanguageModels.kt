@@ -8,7 +8,6 @@ import kotlinx.serialization.Serializable
  * Language models response. See [com.xai.helloworld.network.XAiApi.getLanguageModels]
  *
  * @property models List of language models available and their details. See [LanguageModel]
- * @constructor Create empty Language models response
  */
 @Serializable
 data class LanguageModelsResponse(
