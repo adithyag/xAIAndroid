@@ -5,13 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.xai.helloworld.network.XAiApi
 import com.xai.helloworld.network.data.CompletionsRequest
-import com.xai.helloworld.network.getXAiApi
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainScreenViewModel : ViewModel() {
+@HiltViewModel
+class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() {
     internal var messages: List<Message> by mutableStateOf(emptyList())
-    private val xAiApi by lazy { getXAiApi() }
 
     init {
         viewModelScope.launch {
@@ -29,7 +31,6 @@ class MainScreenViewModel : ViewModel() {
             messages += Message(completionsResponse.choices.first().text, Role.Assistant)
         }
     }
-
 }
 
 enum class Role {

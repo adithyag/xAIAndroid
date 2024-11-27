@@ -24,9 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
 
 @Composable
-internal fun MainScreen(
-    viewModel: MainScreenViewModel,
-) {
+internal fun MainScreen(viewModel: MainScreenViewModel) {
     XAIHelloWorldTheme {
         Column(
             modifier = Modifier.Companion
@@ -92,14 +90,8 @@ private fun ChatInput(onUserMessage: (String) -> Unit) {
     }
 }
 
-// Samsung S22 Ultra is 480x1005dp
-@Preview(showBackground = true, device = "spec:width=480dp,height=1005dp")
+@Preview(showBackground = true, device = DEVICE_SPEC_S22ULTRA)
 @Composable
-fun MainScreenPreview() {
-    val viewModel = MainScreenViewModel().apply {
-        onUserMessage("Hello World")
-        onUserMessage("How are you?")
-        onUserMessage("I'm fine, thank you!")
-    }
-    MainScreen(viewModel)
+fun Preview() {
+    MainScreenPreview()
 }

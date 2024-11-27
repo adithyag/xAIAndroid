@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
+    alias(libs.plugins.hilt)
 }
 
 
@@ -75,4 +76,8 @@ dependencies {
     implementation(libs.ktor.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.logging)
+    // Hilt
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt)
+    implementation(libs.viewmodel.compose)
 }
