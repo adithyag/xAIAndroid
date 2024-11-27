@@ -16,13 +16,19 @@ class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() 
     internal var messages: List<Message> by mutableStateOf(emptyList())
 
     init {
-        viewModelScope.launch {
-            val apiKeyInfo = xAiApi.getApiKeyInfo()
-            messages += Message(apiKeyInfo.toString())
-        }
-        viewModelScope.launch {
-            val languageModels = xAiApi.getLanguageModels()
-            messages += Message(languageModels.toString())
+        with(viewModelScope) {
+            launch {
+                val apiKeyInfo = xAiApi.getApiKeyInfo()
+                messages += Message(apiKeyInfo.toString())
+            }
+            launch {
+                val languageModels = xAiApi.getLanguageModels()
+                messages += Message(languageModels.toString())
+            }
+            launch {
+                val languageModel = xAiApi.getLanguageModel("grok-beta")
+                messages += Message(languageModel.toString())
+            }
         }
     }
 

@@ -7,12 +7,12 @@ import kotlinx.serialization.Serializable
 /**
  * Language models response. See [com.xai.helloworld.network.XAiApi.getLanguageModels]
  *
- * @property models List of language models available and their details. See [Model]
+ * @property models List of language models available and their details. See [LanguageModel]
  * @constructor Create empty Language models response
  */
 @Serializable
 data class LanguageModelsResponse(
-    val models: List<Model>
+    val models: List<LanguageModel>
 )
 
 /**
@@ -31,7 +31,7 @@ data class LanguageModelsResponse(
  * @property completionTextTokenPrice Price of 10 billion text output tokens in USD
  */
 @Serializable
-data class Model(
+data class LanguageModel(
     val id: String,
     val fingerprint: String,
     val created: Int,
