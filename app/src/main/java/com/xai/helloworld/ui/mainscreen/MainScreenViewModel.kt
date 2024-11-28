@@ -1,31 +1,32 @@
 package com.xai.helloworld.ui.mainscreen
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xai.helloworld.network.XAiApi
 import com.xai.helloworld.network.data.ChatCompletionsRequest
 import com.xai.helloworld.network.data.MessageRole
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.xai.helloworld.network.data.Message as MessageData
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() {
-    internal var messages: List<Message> by mutableStateOf(emptyList())
     private val systemMessage = MessageData(
         role = MessageRole.SYSTEM,
         content = "You are Grok, a helpful assistant."
     )
 
+    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    internal var messages = _messages.asStateFlow()
+
     fun onUserMessage(msg: String) {
         val newMessage = Message(msg, pending = true)
-        messages += newMessage
+        _messages.value += newMessage
         viewModelScope.launch {
-            val request = createChatCompletionRequest(messages)
+            val request = createChatCompletionRequest(_messages.value)
             val response = xAiApi.getChatCompletions(request)
             newMessage.pending = false
             onModelResponse(response.choices.first().message.content.toString())
@@ -33,7 +34,7 @@ class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() 
     }
 
     fun onModelResponse(response: String) {
-        messages += Message(response, Role.Assistant)
+        _messages.value += Message(response, Role.Assistant)
     }
 
     private fun createChatCompletionRequest(messages: List<Message>): ChatCompletionsRequest {

@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,6 +32,7 @@ internal fun MainScreen(viewModel: MainScreenViewModel) {
                 .background(Color.Companion.Yellow)
                 .safeDrawingPadding()
         ) {
+            val messages by viewModel.messages.collectAsState()
             LazyColumn(
                 Modifier.Companion
                     .background(Color.Companion.Magenta)
@@ -38,7 +40,7 @@ internal fun MainScreen(viewModel: MainScreenViewModel) {
                     .weight(1f),
                 reverseLayout = true,
             ) {
-                items(viewModel.messages.asReversed(), key = Message::id) {
+                items(messages.asReversed()) {
                     ChatMessage(it)
                 }
             }
