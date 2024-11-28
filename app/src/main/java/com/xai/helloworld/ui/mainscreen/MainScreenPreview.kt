@@ -1,6 +1,7 @@
 package com.xai.helloworld.ui.mainscreen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import com.xai.helloworld.network.XAiApi
 import com.xai.helloworld.network.data.ApiKeyResponse
 import com.xai.helloworld.network.data.ChatCompletionsRequest
@@ -16,7 +17,12 @@ import com.xai.helloworld.network.data.Usage
 
 // Samsung S22 Ultra is 480x1005dp
 
-internal const val DEVICE_SPEC_S22ULTRA = "spec:width=480dp,height=1005dp"
+private const val DEVICE_SPEC_S22ULTRA = "spec:width=480dp,height=1005dp"
+
+@Retention(value = AnnotationRetention.BINARY)
+@Target(AnnotationTarget.FUNCTION)
+@Preview(showBackground = true, device = DEVICE_SPEC_S22ULTRA)
+annotation class PreviewS22Ultra
 
 @Composable
 fun MainScreenPreview() {

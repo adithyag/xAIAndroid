@@ -5,11 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.xai.helloworld.ui.mainscreen.DEVICE_SPEC_S22ULTRA
 import com.xai.helloworld.ui.mainscreen.MainScreen
 import com.xai.helloworld.ui.mainscreen.MainScreenPreview
+import com.xai.helloworld.ui.mainscreen.PreviewS22Ultra
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -24,7 +23,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true, device = DEVICE_SPEC_S22ULTRA)
+@PreviewS22Ultra
 @Composable
 fun Preview() {
     MainScreenPreview()
