@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Theme required to get rid of top bar decor   -->
-    <style name="Theme.xAI" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.xAI" parent="android:Theme.DeviceDefault.DayNight" >
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>

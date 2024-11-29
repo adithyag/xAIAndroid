@@ -15,15 +15,17 @@ import com.xai.helloworld.network.data.ModelsResponse
 import com.xai.helloworld.network.data.PromptTokensDetails
 import com.xai.helloworld.network.data.Usage
 
-// Samsung S22 Ultra is 480x1005dp
-
 private const val DEVICE_SPEC_S22ULTRA = "spec:width=480dp,height=1005dp"
 
 @Retention(value = AnnotationRetention.BINARY)
 @Target(AnnotationTarget.FUNCTION)
-@Preview(showBackground = true, device = DEVICE_SPEC_S22ULTRA)
+@Preview(
+    device = DEVICE_SPEC_S22ULTRA,
+    showSystemUi = true,
+)
 annotation class PreviewS22Ultra
 
+@PreviewS22Ultra
 @Composable
 fun MainScreenPreview() {
     val fakeXAiApi = object : XAiApi {
