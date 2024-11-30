@@ -1,19 +1,18 @@
 package com.xai.helloworld.ui.mainscreen
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.xai.helloworld.network.XAiApi
-import com.xai.helloworld.network.data.ApiKeyResponse
-import com.xai.helloworld.network.data.ChatCompletionsRequest
-import com.xai.helloworld.network.data.ChatCompletionsResponse
-import com.xai.helloworld.network.data.CompletionsRequest
-import com.xai.helloworld.network.data.CompletionsResponse
-import com.xai.helloworld.network.data.LanguageModel
-import com.xai.helloworld.network.data.LanguageModelsResponse
-import com.xai.helloworld.network.data.Model
-import com.xai.helloworld.network.data.ModelsResponse
-import com.xai.helloworld.network.data.PromptTokensDetails
-import com.xai.helloworld.network.data.Usage
+import androidx.core.content.ContextCompat
+import com.xai.helloworld.R
+import com.xai.helloworld.repository.LlmDomain.LlmMessage
+import com.xai.helloworld.repository.LlmDomain.Role
+import kotlinx.coroutines.flow.MutableStateFlow
 
 private const val DEVICE_SPEC_S22ULTRA = "spec:width=480dp,height=1005dp"
 
@@ -28,104 +27,40 @@ annotation class PreviewS22Ultra
 @PreviewS22Ultra
 @Composable
 fun MainScreenPreview() {
-    val fakeXAiApi = object : XAiApi {
-        override suspend fun getApiKeyInfo(): ApiKeyResponse {
-            return ApiKeyResponse(
-                acls = emptyList(),
-                apiKeyBlocked = false,
-                apiKeyDisabled = false,
-                apiKeyId = "",
-                createTime = "",
-                modifiedBy = "",
-                modifyTime = "",
-                name = "",
-                redactedApiKey = "",
-                teamBlocked = false,
-                teamId = "",
-                userId = "",
-            )
-        }
-
-        override suspend fun getLanguageModels(): LanguageModelsResponse {
-            return LanguageModelsResponse(
-                models = emptyList(),
-            )
-        }
-
-        override suspend fun getLanguageModel(modelId: String): LanguageModel {
-            return LanguageModel(
-                id = "",
-                fingerprint = "",
-                created = 0,
-                objectX = "",
-                ownedBy = "",
-                version = "",
-                inputModalities = emptyList(),
-                outputModalities = emptyList(),
-                promptTextTokenPrice = 0,
-                promptImageTokenPrice = 0,
-                completionTextTokenPrice = 0,
-            )
-        }
-
-        override suspend fun getModels(): ModelsResponse {
-            return ModelsResponse(
-                data = emptyList(),
-                objectX = "",
-            )
-        }
-
-        override suspend fun getModel(modelId: String): Model {
-            return Model(
-                id = "",
-                created = 0,
-                objectX = "",
-                ownedBy = "",
-            )
-        }
-
-        override suspend fun getCompletions(completionRequest: CompletionsRequest)
-                : CompletionsResponse {
-            return CompletionsResponse(
-                id = "",
-                completionChoices = emptyList(),
-                created = 0,
-                model = "",
-                systemFingerprint = "",
-                objectX = "",
-                usage = Usage(
-                    completionTokens = 0,
-                    promptTokens = 0,
-                    totalTokens = 0,
-                    promptTokensDetails = PromptTokensDetails(0, 0, 0, 0)
-                )
-            )
-        }
-
-        override suspend fun getChatCompletions(chatCompletionRequest: ChatCompletionsRequest)
-                : ChatCompletionsResponse {
-            return ChatCompletionsResponse(
-                id = "",
-                objectX = "",
-                created = 0,
-                model = "",
-                choices = emptyList(),
-                usage = Usage(
-                    completionTokens = 0,
-                    promptTokens = 0,
-                    totalTokens = 0,
-                    promptTokensDetails = PromptTokensDetails(0, 0, 0, 0)
-                ),
-                systemFingerprint = "",
-            )
-        }
-
+    val messages = MutableStateFlow<List<LlmMessage>>(
+        listOf(
+            LlmMessage("How are you?", role = Role.User),
+            LlmMessage("I'm fine, thank you!", role = Role.Assistant),
+            LlmMessage("Great!", pending = true),
+        )
+    )
+    val onUserMessage: (String) -> Unit = {}
+    val drawable = R.drawable.ic_launcher_foreground
+    val painter = ContextCompat.getDrawable(LocalContext.current, drawable)?.let {
+        val bitmap =
+            Bitmap.createBitmap(it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        it.setBounds(0, 0, canvas.width, canvas.height)
+        it.draw(canvas)
+        BitmapPainter(bitmap.asImageBitmap())
     }
-
-    val viewModel = MainScreenViewModel(fakeXAiApi).apply {
-        onUserMessage("How are you?")
-        onModelResponse("I'm fine, thank you!")
-        onUserMessage("Great!")
-    }
-    MainScreen(viewModel)
+    val images = MutableStateFlow<List<Image>>(
+        listOf(
+            Image(
+                uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
+                thumbnailPainter = painter!!,
+                mimeType = "image/jpeg",
+                base64 = "bleh"
+            )
+        )
+    )
+    val onImageDeleted: (Image) -> Unit = { images.value -= it }
+    val onImageSelected: (Uri?) -> Unit = {}
+    MainScreen(
+        messages = messages,
+        onUserMessage = onUserMessage,
+        images = images,
+        onImageSelected = onImageSelected,
+        onImageDeleted = onImageDeleted,
+    )
 }

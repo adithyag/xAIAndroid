@@ -26,7 +26,7 @@ import kotlinx.serialization.json.Json
 
 @Module
 @InstallIn(SingletonComponent::class)
-class XAiModule {
+object XAiModule {
     @Provides
     fun provideXAiApi(): XAiApi {
         return Ktorfit.Builder()

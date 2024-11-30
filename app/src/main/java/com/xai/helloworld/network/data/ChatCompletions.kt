@@ -1,7 +1,17 @@
 package com.xai.helloworld.network.data
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Completions request for a given prompt. See [com.xai.helloworld.network.XAiApi.getCompletions]
@@ -60,7 +70,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatCompletionsRequest(
     val messages: List<Message>,
-    val model: String = DEFAULT_MODEL,
+    val model: String,
     @SerialName("frequency_penalty")
     val frequencyPenalty: Double? = null,
     @SerialName("logit_bias")
@@ -111,7 +121,7 @@ data class ChatCompletionsRequest(
             }
         }
         if (streamOptions != null) {
-            require(stream == true) {"If streamOptions is set, stream must be true"}
+            require(stream == true) { "If streamOptions is set, stream must be true" }
         }
         if (temperature != null) {
             require(temperature in 0.0..2.0) {
@@ -119,7 +129,7 @@ data class ChatCompletionsRequest(
             }
         }
         if (topLogprobs != null) {
-            require(logprobs == true) {"topprobs must be true if topLogprobs is set"}
+            require(logprobs == true) { "topprobs must be true if topLogprobs is set" }
             require(topLogprobs in 0..20) {
                 "topLogprobs must be between 0 and 20 but is $topLogprobs"
             }
@@ -127,18 +137,131 @@ data class ChatCompletionsRequest(
     }
 }
 
-/**
- * Message holds information about a single message in a chat completion. See
- * [ChatCompletionsRequest.messages]
- *
- * @property role The role of the messages author. See [MessageRole]
- * @property content The contents of the message
- */
-@Serializable
-data class Message(
-    val role: MessageRole,
-    val content: String
-)
+object MessageSerializer : KSerializer<Message> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Message")
+
+    override fun serialize(encoder: Encoder, value: Message) {
+        when (value) {
+            is Message.Text -> encoder.encodeSerializableValue(Message.Text.serializer(), value)
+            is Message.Image -> encoder.encodeSerializableValue(Message.Image.serializer(), value)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Message {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("MessageSerializer only supports JSON currently")
+        val jsonObj = jsonDecoder.decodeJsonElement().jsonObject
+
+        // Inspect the `content` field to decide the type of message
+        return when (val contentElement = jsonObj["content"]) {
+            is JsonPrimitive -> jsonDecoder.json.decodeFromJsonElement(
+                Message.Text.serializer(),
+                jsonObj
+            )
+
+            is JsonArray -> jsonDecoder.json.decodeFromJsonElement(
+                Message.Image.serializer(),
+                jsonObj
+            )
+
+            else -> throw SerializationException("Unknown content type in Message: $contentElement")
+        }
+    }
+
+}
+
+@Serializable(with = MessageSerializer::class)
+sealed class Message {
+    /**
+     * Holds information about a single message in a chat completion. See
+     * [ChatCompletionsRequest.messages]
+     *
+     * @property role The role of the messages author. See [MessageRole]
+     * @property content The contents of the message
+     */
+    @Serializable
+    data class Text(
+        val role: MessageRole,
+        val content: String
+    ) : Message()
+
+    /**
+     * An array of content parts with a defined type. Supported options differ based on the model
+     * being used to generate the response. Can contain text or image inputs. See
+     * [ChatCompletionsRequest.messages] and [Content]
+     *
+     * @property role The role of the messages author. See [MessageRole]
+     * @property content The contents of the message
+     */
+    @Serializable
+    data class Image(
+        val role: MessageRole,
+        val content: List<Content>
+    ) : Message() {
+
+        @Serializable
+        sealed class Content
+
+        /**
+         * Text input to the model
+         */
+        @Serializable
+        @SerialName("text")
+        data class Text(
+            val text: String,
+        ) : Content()
+
+        /**
+         * Image input to the model
+         *
+         * @property imageUrl Either a URL of the image or the base64 encoded image data.
+         */
+        @Serializable
+        @SerialName("image_url")
+        data class ImageContent(
+            @SerialName("image_url")
+            val imageUrl: Url
+        ) : Content() {
+            /**
+             * Encodes an image
+             *
+             * @property url Either a URL of the image or the base64 encoded image data.
+             * @property detail Specifies the detail level of the image. See [Detail]
+             */
+            @Serializable
+            data class Url(
+                val url: String,
+                val detail: Detail? = null,
+            ) {
+                enum class Detail {
+                    @SerialName("auto")
+                    AUTO,
+
+                    @SerialName("low")
+                    LOW,
+
+                    @SerialName("high")
+                    HIGH,
+                }
+
+                override fun toString() = buildString {
+                    append("Url(url=")
+                    if (url.length > 14) {
+                        append(url.take(7))
+                        append("...")
+                        append(url.takeLast(7))
+                    } else {
+                        append(url)
+                    }
+                    if (detail != null) {
+                        append(", detail=$detail")
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 /**
  * The role of the author of the message. See [Message.role]
@@ -147,18 +270,21 @@ enum class MessageRole {
     /**
      * Corresponds to the input message usually from developer to instruct the model.
      */
-    @SerialName("system") SYSTEM,
+    @SerialName("system")
+    SYSTEM,
 
     /**
      * Corresponds to the input message from the user to the model
      */
-    @SerialName("user") USER,
+    @SerialName("user")
+    USER,
 
     /**
      * Corresponds to the output message from the model to the user that is fed back as input to
      * provide the history of conversations for context.
      */
-    @SerialName("assistant") ASSISTANT,
+    @SerialName("assistant")
+    ASSISTANT,
 }
 
 /**

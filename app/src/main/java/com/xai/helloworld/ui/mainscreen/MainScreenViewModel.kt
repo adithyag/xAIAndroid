@@ -1,68 +1,68 @@
 package com.xai.helloworld.ui.mainscreen
 
+import android.net.Uri
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.xai.helloworld.network.XAiApi
-import com.xai.helloworld.network.data.ChatCompletionsRequest
-import com.xai.helloworld.network.data.MessageRole
+import com.xai.helloworld.repository.ImageRepository
+import com.xai.helloworld.repository.LlmDomain
+import com.xai.helloworld.repository.LlmDomain.LlmMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.xai.helloworld.network.data.Message as MessageData
 
 @HiltViewModel
-class MainScreenViewModel @Inject constructor(val xAiApi: XAiApi) : ViewModel() {
-    private val systemMessage = MessageData(
-        role = MessageRole.SYSTEM,
-        content = "You are Grok, a helpful assistant."
-    )
+class MainScreenViewModel @Inject constructor(
+    val llmDomain: LlmDomain,
+    val imageRepository: ImageRepository
+) : ViewModel() {
 
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    private val _messages = MutableStateFlow<List<LlmMessage>>(emptyList())
     internal var messages = _messages.asStateFlow()
 
+    private val _images = MutableStateFlow<List<Image>>(emptyList())
+    internal var images = _images.asStateFlow()
+
     fun onUserMessage(msg: String) {
-        val newMessage = Message(msg, pending = true)
+        val newMessage = LlmMessage(
+            msg = msg,
+            images = _images.value.map { LlmMessage.Image(it.mimeType, it.base64) },
+            pending = true
+        )
         _messages.value += newMessage
         viewModelScope.launch {
-            val request = createChatCompletionRequest(_messages.value)
-            val response = xAiApi.getChatCompletions(request)
+            val assistantMessage = llmDomain.chat(_messages.value)
             newMessage.pending = false
-            onModelResponse(response.choices.first().message.content.toString())
+            _messages.value += assistantMessage
         }
     }
 
-    fun onModelResponse(response: String) {
-        _messages.value += Message(response, Role.Assistant)
+    fun onImageAdded(uri: Uri?) {
+        if (uri != null) {
+            viewModelScope.launch {
+                _images.value += Image(
+                    uri = uri,
+                    thumbnailPainter = BitmapPainter(
+                        imageRepository.getThumbnailFromUri(uri).asImageBitmap()
+                    ),
+                    mimeType = imageRepository.getMimeType(uri) ?: "image/jpeg",
+                    base64 = imageRepository.getBase64EncodedData(uri)
+                )
+            }
+        }
     }
 
-    private fun createChatCompletionRequest(messages: List<Message>): ChatCompletionsRequest {
-        val messages = listOf(systemMessage) + messages.map { it.toMessageData() }
-        return ChatCompletionsRequest(messages = messages)
-    }
-}
-
-enum class Role {
-    Assistant,
-    User
-}
-
-data class Message(
-    val msg: String,
-    val role: Role = Role.User,
-    val id: Long = Companion.id++,
-    var pending: Boolean = false
-) {
-    companion object {
-        var id = 0L
+    fun onImageRemoved(image: Image) {
+        _images.value -= image
     }
 }
 
-private fun Message.toMessageData() = MessageData(
-    role = when (role) {
-        Role.Assistant -> MessageRole.ASSISTANT
-        Role.User -> MessageRole.USER
-    },
-    content = msg
+data class Image(
+    val uri: Uri,
+    val thumbnailPainter: BitmapPainter,
+    val mimeType: String,
+    val base64: String,
 )

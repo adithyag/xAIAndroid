@@ -1,5 +1,9 @@
 package com.xai.helloworld.ui.mainscreen
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +16,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -25,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -34,14 +45,40 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.xai.helloworld.R
+import com.xai.helloworld.repository.LlmDomain.LlmMessage
+import com.xai.helloworld.repository.LlmDomain.Role
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
+import kotlinx.coroutines.flow.StateFlow
+
+private val jpegRequest = PickVisualMediaRequest(PickVisualMedia.SingleMimeType("image/jpeg"))
 
 @Composable
 internal fun MainScreen(viewModel: MainScreenViewModel) {
+    MainScreen(
+        viewModel.messages,
+        viewModel::onUserMessage,
+        viewModel.images,
+        viewModel::onImageAdded,
+        viewModel::onImageRemoved
+    )
+}
+
+@Composable
+fun MainScreen(
+    messages: StateFlow<List<LlmMessage>>,
+    onUserMessage: (String) -> Unit,
+    images: StateFlow<List<Image>>,
+    onImageSelected: (Uri?) -> Unit,
+    onImageDeleted: (Image) -> Unit
+) {
     XAIHelloWorldTheme {
+        val launcher =
+            rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+                onImageSelected(uri)
+            }
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
+                .background(colorScheme.background)
                 .padding(16.dp)
                 .paint(
                     painterResource(R.drawable.grok_text),
@@ -50,7 +87,7 @@ internal fun MainScreen(viewModel: MainScreenViewModel) {
                 )
                 .safeDrawingPadding(),
         ) {
-            val messages by viewModel.messages.collectAsState()
+            val messages by messages.collectAsState()
             LazyColumn(
                 Modifier
                     .fillMaxWidth()
@@ -61,13 +98,39 @@ internal fun MainScreen(viewModel: MainScreenViewModel) {
                     ChatMessage(it)
                 }
             }
-            ChatInput(viewModel::onUserMessage)
+            val images by images.collectAsState()
+            if (images.isNotEmpty()) {
+                Row {
+                    for (image in images) {
+                        BadgedBox(
+                            {
+                                Badge {
+                                    Icon(Icons.Filled.Close, "close", Modifier.clickable(
+                                        onClick = { onImageDeleted(image) }
+                                    ))
+                                }
+                            },
+                            Modifier.padding(end = 20.dp)
+                        ) {
+                            Image(
+                                image.thumbnailPainter,
+                                "attached image",
+                                Modifier.size(100.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+            }
+            ChatInput(onUserMessage) {
+                launcher.launch(jpegRequest)
+            }
         }
     }
 }
 
 @Composable
-private fun ChatMessage(message: Message) {
+private fun ChatMessage(message: LlmMessage) {
     Row {
         val icon = if (message.role == Role.Assistant) R.drawable.grok else R.drawable.user
         val desc = if (message.role == Role.Assistant) "grok icon" else "user icon"
@@ -81,23 +144,23 @@ private fun ChatMessage(message: Message) {
                 .padding(bottom = 8.dp, start = 8.dp)
                 .background(
                     when (message.role) {
-                        Role.Assistant -> MaterialTheme.colorScheme.primary
+                        Role.Assistant -> colorScheme.primary
                         Role.User -> {
-                            if (message.pending) MaterialTheme.colorScheme.tertiary
-                            else MaterialTheme.colorScheme.background
+                            if (message.pending) colorScheme.tertiary
+                            else colorScheme.background
                         }
                     },
-                    shape = MaterialTheme.shapes.small
+                    shape = shapes.small
                 )
                 .padding(4.dp)
                 .fillMaxWidth(),
             text = message.msg,
-            style = MaterialTheme.typography.bodyLarge,
+            style = typography.bodyLarge,
             color = when (message.role) {
-                Role.Assistant -> MaterialTheme.colorScheme.onSecondaryContainer
+                Role.Assistant -> colorScheme.onSecondaryContainer
                 Role.User -> {
-                    if (message.pending) MaterialTheme.colorScheme.onTertiary
-                    else MaterialTheme.colorScheme.onPrimaryContainer
+                    if (message.pending) colorScheme.onTertiary
+                    else colorScheme.onPrimaryContainer
                 }
 
             }
@@ -106,7 +169,7 @@ private fun ChatMessage(message: Message) {
 }
 
 @Composable
-private fun ChatInput(onUserMessage: (String) -> Unit) {
+private fun ChatInput(onUserMessage: (String) -> Unit, onImageClick: () -> Unit) {
     var currentUserInput by rememberSaveable { mutableStateOf("") }
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -118,24 +181,28 @@ private fun ChatInput(onUserMessage: (String) -> Unit) {
             placeholder = @Composable {
                 Text(
                     text = "Ask xAI anything",
-                    color = MaterialTheme.colorScheme.inverseOnSurface,
-                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.inverseOnSurface,
+                    style = typography.titleLarge,
                 )
             },
             value = currentUserInput,
             trailingIcon = @Composable {
-                SendIcon(currentUserInput.isNotBlank()) {
-                    onUserMessage(currentUserInput)
-                    currentUserInput = ""
-                }
+                SendIcons(
+                    currentUserInput.isNotBlank(),
+                    onSend = {
+                        onUserMessage(currentUserInput)
+                        currentUserInput = ""
+                    },
+                    onImageClick = onImageClick
+                )
             },
             onValueChange = { currentUserInput = it },
             colors = TextFieldDefaults.colors().copy(
-                focusedContainerColor = MaterialTheme.colorScheme.primary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.primary,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
+                focusedContainerColor = colorScheme.primary,
+                unfocusedContainerColor = colorScheme.primary,
+                cursorColor = colorScheme.onPrimary,
             ),
-            shape = MaterialTheme.shapes.small,
+            shape = shapes.small,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Send,
                 keyboardType = KeyboardType.Text,
@@ -146,20 +213,32 @@ private fun ChatInput(onUserMessage: (String) -> Unit) {
 }
 
 @Composable
-fun SendIcon(enabled: Boolean, onClick: () -> Unit) {
-    Image(
-        ImageVector.vectorResource(R.drawable.send),
-        contentDescription = "Send message to Grok",
-        Modifier
-            .size(36.dp)
-            .clickable(enabled = enabled, onClick = onClick),
-        colorFilter = ColorFilter.tint(
-            if (enabled)
-                MaterialTheme.colorScheme.onPrimary
-            else
-                MaterialTheme.colorScheme.inverseSurface
-        )
-    )
+fun SendIcons(enabled: Boolean, onSend: () -> Unit, onImageClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        IconButton(
+            onClick = onImageClick,
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Icon(
+                ImageVector.vectorResource(R.drawable.attach_image),
+                "Attach image",
+                Modifier.size(36.dp),
+                tint = colorScheme.onPrimary,
+            )
+        }
+        IconButton(
+            onClick = onSend,
+            modifier = Modifier.padding(end = 8.dp),
+            enabled = enabled,
+        ) {
+            Icon(
+                ImageVector.vectorResource(R.drawable.send),
+                "Send message to Grok",
+                Modifier.size(36.dp),
+                tint = if (enabled) colorScheme.onPrimary else colorScheme.inverseSurface
+            )
+        }
+    }
 }
 
 @PreviewS22Ultra

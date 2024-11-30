@@ -67,7 +67,7 @@ data class CompletionsRequest(
     val logprobs: Int? = null,
     @SerialName("max_tokens")
     val maxTokens: Int? = null,
-    val model: String = DEFAULT_MODEL,
+    val model: String,
     val n: Int? = null,
     @SerialName("presence_penalty")
     val presencePenalty: Double? = null,
