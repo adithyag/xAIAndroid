@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -179,9 +180,10 @@ private fun ChatMessage(message: Message) {
                         Role.Assistant -> colorScheme.primary
                         Role.User -> {
                             if (message.pending) colorScheme.tertiary
-                            else colorScheme.background
+                            else Color.Transparent
                         }
-                    }, shape = shapes.small
+                    },
+                    shape = shapes.small
                 )
                 .padding(4.dp)
                 .fillMaxWidth(),
