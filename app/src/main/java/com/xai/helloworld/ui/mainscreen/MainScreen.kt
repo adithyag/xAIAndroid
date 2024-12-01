@@ -186,10 +186,7 @@ private fun ChatMessage(message: Message) {
                 .background(
                     when (message.role) {
                         Role.Assistant -> colorScheme.primary
-                        Role.User -> {
-                            if (message.pending) colorScheme.tertiary
-                            else Color.Transparent
-                        }
+                        Role.User -> Color.Transparent
                     },
                     shape = shapes.small
                 )
@@ -202,11 +199,7 @@ private fun ChatMessage(message: Message) {
                     style = typography.bodyLarge,
                     color = when (message.role) {
                         Role.Assistant -> colorScheme.onSecondaryContainer
-                        Role.User -> {
-                            if (message.pending) colorScheme.onTertiary
-                            else colorScheme.onPrimaryContainer
-                        }
-
+                        Role.User -> colorScheme.onPrimaryContainer
                     }
                 )
             }

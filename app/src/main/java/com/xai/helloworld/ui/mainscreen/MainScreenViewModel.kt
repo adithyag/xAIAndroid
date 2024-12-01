@@ -35,7 +35,6 @@ class MainScreenViewModel @Inject constructor(
             role = Role.User,
             msg = msg,
             images = _images.value,
-            pending = true
         )
         _messages.value += newMessage
         viewModelScope.launch {
@@ -43,7 +42,6 @@ class MainScreenViewModel @Inject constructor(
             val assistantMessage = llmDomain.chat(
                 _messages.value.map { it.toLlmMessage() }
             )
-            newMessage.pending = false
             _messages.value += assistantMessage.toMessage()
             _processing.value = false
         }
@@ -73,7 +71,6 @@ data class Message(
     val role: Role,
     val msg: String,
     val images: List<Image> = emptyList(),
-    var pending: Boolean = false
 )
 
 private fun Message.toLlmMessage() = LlmMessage(

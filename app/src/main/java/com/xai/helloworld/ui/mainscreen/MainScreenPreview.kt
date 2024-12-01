@@ -64,7 +64,7 @@ fun MainScreenPreview() {
             Message(msg = "I'm fine, thank you!", role = Role.Assistant),
             Message(msg = "Did you not see my images?", role = Role.User),
             Message(msg = "I thought it was jut my shadow.", role = Role.Assistant),
-            Message(msg = "Great!", role = Role.User, pending = true),
+            Message(msg = "Great!", role = Role.User),
         )
     )
     val onUserMessage: (String) -> Unit = {}

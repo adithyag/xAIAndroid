@@ -3,6 +3,7 @@ package com.xai.helloworld.repository
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import android.util.Size
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,6 @@ class ImageRepository @Inject constructor(@ApplicationContext val context: Conte
     }
 
     suspend fun getMimeType(uri: Uri): String? = withContext(Dispatchers.IO) {
-        context.contentResolver.getType(uri)
+        context.contentResolver.getType(uri).also { Log.d("ImageRepository", "getMimeType: $it") }
     }
 }
