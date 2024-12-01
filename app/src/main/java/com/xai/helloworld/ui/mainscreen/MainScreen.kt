@@ -316,6 +316,7 @@ fun ProcessingIndicator() {
         painter = painterResource(id = R.drawable.grok), // Replace with your image resource
         contentDescription = "Rotating Image",
         modifier = Modifier
+            .padding(bottom = 16.dp)
             .size(24.dp)
             .graphicsLayer(rotationZ = rotation) // Apply rotation to the image
     )
