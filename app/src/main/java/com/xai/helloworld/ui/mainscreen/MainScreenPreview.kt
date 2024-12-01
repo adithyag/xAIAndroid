@@ -84,6 +84,7 @@ fun MainScreenPreview() {
         messages = messages,
         onUserMessage = onUserMessage,
         images = images,
+        processing = MutableStateFlow(true),
         onImageSelected = onImageSelected,
         onImageDeleted = onImageDeleted,
     )

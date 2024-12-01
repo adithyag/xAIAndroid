@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -55,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import com.xai.helloworld.R
 import com.xai.helloworld.repository.LlmDomain.Role
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 
 private val jpegRequest = PickVisualMediaRequest(PickVisualMedia.SingleMimeType("image/jpeg"))
@@ -65,6 +68,7 @@ internal fun MainScreen(viewModel: MainScreenViewModel) {
         viewModel.messages,
         viewModel::onUserMessage,
         viewModel.images,
+        viewModel.processing,
         viewModel::onImageAdded,
         viewModel::onImageRemoved
     )
@@ -77,6 +81,7 @@ fun MainScreen(
     messages: StateFlow<List<Message>>,
     onUserMessage: (String) -> Unit,
     images: StateFlow<List<Image>>,
+    processing: StateFlow<Boolean>,
     onImageSelected: (Uri?) -> Unit,
     onImageDeleted: (Image) -> Unit
 ) {
@@ -109,6 +114,9 @@ fun MainScreen(
                         ),
                     reverseLayout = true,
                 ) {
+                    if (processing.value) {
+                        item { ProcessingIndicator() }
+                    }
                     if (hasImages) {
                         item {
                             Spacer(
@@ -284,6 +292,33 @@ fun SendIcons(enabled: Boolean, onSend: () -> Unit, onImageClick: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+fun ProcessingIndicator() {
+    // Create a state to hold the rotation value
+    var rotation by remember { mutableStateOf(0f) }
+
+    // Launch a coroutine to continuously update the rotation
+    LaunchedEffect(Unit) {
+        while (true) {
+            // Update the rotation value by 1 degree per frame
+            rotation += 1f
+            if (rotation >= 360f) {
+                rotation = 0f // Reset the rotation to 0 when it reaches 360
+            }
+            delay(16) // Delay for ~60fps (1 frame per 16ms)
+        }
+    }
+
+    // Display the rotating image
+    Image(
+        painter = painterResource(id = R.drawable.grok), // Replace with your image resource
+        contentDescription = "Rotating Image",
+        modifier = Modifier
+            .size(24.dp)
+            .graphicsLayer(rotationZ = rotation) // Apply rotation to the image
+    )
 }
 
 @PreviewS22Ultra

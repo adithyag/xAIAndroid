@@ -27,6 +27,9 @@ class MainScreenViewModel @Inject constructor(
     private val _images = MutableStateFlow<List<Image>>(emptyList())
     internal var images = _images.asStateFlow()
 
+    private val _processing = MutableStateFlow(false)
+    internal var processing = _processing.asStateFlow()
+
     fun onUserMessage(msg: String) {
         val newMessage = Message(
             role = Role.User,
@@ -36,11 +39,13 @@ class MainScreenViewModel @Inject constructor(
         )
         _messages.value += newMessage
         viewModelScope.launch {
+            _processing.value = true
             val assistantMessage = llmDomain.chat(
                 _messages.value.map { it.toLlmMessage() }
             )
             newMessage.pending = false
             _messages.value += assistantMessage.toMessage()
+            _processing.value = false
         }
     }
 
