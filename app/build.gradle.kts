@@ -80,4 +80,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
     implementation(libs.viewmodel.compose)
+    // Navigation
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
 }

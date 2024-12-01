@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -53,28 +54,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.xai.helloworld.R
-import com.xai.helloworld.repository.LlmDomain.Role
-import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
+import com.xai.helloworld.ui.PreviewS22Ultra
+import com.xai.helloworld.ui.theme.Dimensions
+import com.xai.helloworld.ui.theme.Dimensions.AppMargin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 
 private val jpegRequest = PickVisualMediaRequest(PickVisualMedia.SingleMimeType("image/jpeg"))
 
 @Composable
-internal fun MainScreen(viewModel: MainScreenViewModel) {
+internal fun MainScreen(viewModel: MainScreenViewModel, onInfoClicked: () -> Unit) {
     MainScreen(
         viewModel.messages,
         viewModel::onUserMessage,
         viewModel.images,
         viewModel.processing,
         viewModel::onImageAdded,
-        viewModel::onImageRemoved
+        viewModel::onImageRemoved,
+        onInfoClicked,
     )
 }
-
-private val THUMBNAIL_SIZE = 100.dp
 
 @Composable
 fun MainScreen(
@@ -83,64 +83,76 @@ fun MainScreen(
     images: StateFlow<List<Image>>,
     processing: StateFlow<Boolean>,
     onImageSelected: (Uri?) -> Unit,
-    onImageDeleted: (Image) -> Unit
+    onImageDeleted: (Image) -> Unit,
+    onInfoClick: () -> Unit,
 ) {
-    XAIHelloWorldTheme {
-        val launcher = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-            onImageSelected(uri)
-        }
-        Column(
-            modifier = Modifier
-                .background(colorScheme.background)
-                .padding(16.dp)
-                .safeDrawingPadding(),
+    val launcher = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        onImageSelected(uri)
+    }
+    Column(
+        modifier = Modifier
+            .background(colorScheme.background)
+            .padding(AppMargin)
+            .safeDrawingPadding(),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
-            Box(
+            val messages by messages.collectAsState()
+            val images by images.collectAsState()
+            val hasImages by remember { derivedStateOf { images.isNotEmpty() } }
+            LazyColumn(
                 Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize()
+                    .paint(
+                        painterResource(R.drawable.ic_launcher_foreground),
+                        contentScale = ContentScale.Fit,
+                        alignment = Alignment.Center,
+                        alpha = 0.05f,
+                    ),
+                reverseLayout = true,
             ) {
-                val messages by messages.collectAsState()
-                val images by images.collectAsState()
-                val hasImages by remember { derivedStateOf { images.isNotEmpty() } }
-                LazyColumn(
-                    Modifier
-                        .fillMaxSize()
-                        .paint(
-                            painterResource(R.drawable.ic_launcher_foreground),
-                            contentScale = ContentScale.Fit,
-                            alignment = Alignment.Center,
-                            alpha = 0.05f,
-                        ),
-                    reverseLayout = true,
-                ) {
-                    if (processing.value) {
-                        item { ProcessingIndicator() }
-                    }
-                    if (hasImages) {
-                        item {
-                            Spacer(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .height(THUMBNAIL_SIZE)
-                            )
-                        }
-                    }
-                    items(messages.asReversed()) {
-                        ChatMessage(it)
-                    }
+                if (processing.value) {
+                    item { ProcessingIndicator() }
                 }
                 if (hasImages) {
-                    Row(Modifier.align(Alignment.BottomEnd)) {
-                        for (image in images) {
-                            Thumbnail(onImageDeleted, image)
-                        }
+                    item {
+                        Spacer(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(Dimensions.ThumbnailSize)
+                        )
+                    }
+                }
+                items(messages.asReversed()) {
+                    ChatMessage(it)
+                }
+            }
+            if (hasImages) {
+                Row(Modifier.align(Alignment.BottomEnd)) {
+                    for (image in images) {
+                        Thumbnail(onImageDeleted, image)
                     }
                 }
             }
-            ChatInput(onUserMessage) {
-                launcher.launch(jpegRequest)
+
+            IconButton(
+                onClick = onInfoClick,
+                Modifier.align(Alignment.TopEnd),
+                enabled = true,
+            ) {
+                Icon(
+                    Icons.Filled.Info,
+                    "info",
+                    Modifier.size(Dimensions.IconButton),
+                    colorScheme.onPrimary,
+                )
             }
+        }
+        ChatInput(onUserMessage) {
+            launcher.launch(jpegRequest)
         }
     }
 }
@@ -159,12 +171,12 @@ private fun Thumbnail(
                     Modifier.clickable(onClick = { onImageDeleted(image) })
                 )
             }
-        }, Modifier.padding(end = 20.dp)
+        }, Modifier.padding(end = Dimensions.BadgePadding)
     ) {
         Image(
             image.thumbnailPainter,
             "attached image",
-            Modifier.size(THUMBNAIL_SIZE),
+            Modifier.size(Dimensions.ThumbnailSize),
             contentScale = ContentScale.Crop
         )
     }
@@ -182,11 +194,11 @@ private fun ChatMessage(message: Message) {
         Image(
             ImageVector.vectorResource(icon),
             contentDescription = desc,
-            Modifier.size(24.dp)
+            Modifier.size(Dimensions.SmallIcon)
         )
         Column(
             modifier = Modifier
-                .padding(bottom = 8.dp, start = 8.dp)
+                .padding(bottom = Dimensions.RowItemPadding, start = Dimensions.RowItemPadding)
                 .background(
                     when (message.type) {
                         Type.User -> Color.Transparent
@@ -195,7 +207,7 @@ private fun ChatMessage(message: Message) {
                     },
                     shape = shapes.small
                 )
-                .padding(4.dp)
+                .padding(Dimensions.ContainerInset)
                 .fillMaxWidth(),
         ) {
             SelectionContainer {
@@ -215,7 +227,7 @@ private fun ChatMessage(message: Message) {
                         Image(
                             image.thumbnailPainter,
                             "attached image",
-                            Modifier.size(THUMBNAIL_SIZE),
+                            Modifier.size(Dimensions.ThumbnailSize),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -270,23 +282,26 @@ private fun ChatInput(onUserMessage: (String) -> Unit, onImageClick: () -> Unit)
 @Composable
 fun SendIcons(enabled: Boolean, onSend: () -> Unit, onImageClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onImageClick, modifier = Modifier.padding(end = 8.dp)) {
+        IconButton(
+            onClick = onImageClick,
+            modifier = Modifier.padding(end = Dimensions.RowItemPadding)
+        ) {
             Icon(
                 ImageVector.vectorResource(R.drawable.attach_image),
                 "Attach image",
-                Modifier.size(36.dp),
+                Modifier.size(Dimensions.IconButton),
                 tint = colorScheme.onPrimary,
             )
         }
         IconButton(
             onClick = onSend,
-            modifier = Modifier.padding(end = 8.dp),
+            modifier = Modifier.padding(end = Dimensions.RowItemPadding),
             enabled = enabled,
         ) {
             Icon(
                 ImageVector.vectorResource(R.drawable.send),
                 "Send message to Grok",
-                Modifier.size(36.dp),
+                Modifier.size(Dimensions.IconButton),
                 tint = if (enabled) colorScheme.onPrimary else colorScheme.inverseSurface
             )
         }
@@ -315,8 +330,8 @@ fun ProcessingIndicator() {
         painter = painterResource(id = R.drawable.grok), // Replace with your image resource
         contentDescription = "Rotating Image",
         modifier = Modifier
-            .padding(bottom = 16.dp)
-            .size(24.dp)
+            .padding(bottom = AppMargin)
+            .size(Dimensions.SmallIcon)
             .graphicsLayer(rotationZ = rotation) // Apply rotation to the image
     )
 }

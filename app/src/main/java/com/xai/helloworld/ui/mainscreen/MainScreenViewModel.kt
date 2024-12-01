@@ -1,6 +1,7 @@
 package com.xai.helloworld.ui.mainscreen
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.ViewModel
@@ -69,6 +70,11 @@ class MainScreenViewModel @Inject constructor(
 
     fun onImageRemoved(image: Image) {
         _images.value -= image
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d("MainScreenViewModel", "onCleared")
     }
 }
 

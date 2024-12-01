@@ -14,6 +14,7 @@ private val DarkColorScheme = darkColorScheme(
     background = Color(0xFF050505),
     inverseSurface = Color(0xFF2F312D),
     inverseOnSurface = Color(0xFF8D9286),
+    surfaceContainerHighest = Color(0XFF192328),
 )
 
 @Composable

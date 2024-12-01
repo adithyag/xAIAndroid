@@ -7,21 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.xai.helloworld.R
-import com.xai.helloworld.repository.LlmDomain.Role
+import com.xai.helloworld.ui.PreviewS22Ultra
+import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
 import kotlinx.coroutines.flow.MutableStateFlow
-
-private const val DEVICE_SPEC_S22ULTRA = "spec:width=480dp,height=1005dp"
-
-@Retention(value = AnnotationRetention.BINARY)
-@Target(AnnotationTarget.FUNCTION)
-@Preview(
-    device = DEVICE_SPEC_S22ULTRA,
-    showSystemUi = true,
-)
-annotation class PreviewS22Ultra
 
 @PreviewS22Ultra
 @Composable
@@ -82,12 +72,15 @@ fun MainScreenPreview() {
     )
     val onImageDeleted: (Image) -> Unit = { images.value -= it }
     val onImageSelected: (Uri?) -> Unit = {}
-    MainScreen(
-        messages = messages,
-        onUserMessage = onUserMessage,
-        images = images,
-        processing = MutableStateFlow(true),
-        onImageSelected = onImageSelected,
-        onImageDeleted = onImageDeleted,
-    )
+    XAIHelloWorldTheme {
+        MainScreen(
+            messages = messages,
+            onUserMessage = onUserMessage,
+            images = images,
+            processing = MutableStateFlow(true),
+            onImageSelected = onImageSelected,
+            onImageDeleted = onImageDeleted,
+            onInfoClick = {},
+        )
+    }
 }
