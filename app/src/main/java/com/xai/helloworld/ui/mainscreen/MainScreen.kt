@@ -173,8 +173,12 @@ private fun Thumbnail(
 @Composable
 private fun ChatMessage(message: Message) {
     Row {
-        val icon = if (message.role == Role.Assistant) R.drawable.grok else R.drawable.user
-        val desc = if (message.role == Role.Assistant) "grok icon" else "user icon"
+        val icon = when (message.type) {
+            Type.Assistant -> R.drawable.grok
+            Type.User -> R.drawable.user
+            Type.Error -> R.drawable.ic_computer
+        }
+        val desc = if (message.type == Type.Assistant) "grok icon" else "user icon"
         Image(
             ImageVector.vectorResource(icon),
             contentDescription = desc,
@@ -184,9 +188,10 @@ private fun ChatMessage(message: Message) {
             modifier = Modifier
                 .padding(bottom = 8.dp, start = 8.dp)
                 .background(
-                    when (message.role) {
-                        Role.Assistant -> colorScheme.primary
-                        Role.User -> Color.Transparent
+                    when (message.type) {
+                        Type.User -> Color.Transparent
+                        Type.Assistant -> colorScheme.primary
+                        Type.Error -> colorScheme.errorContainer
                     },
                     shape = shapes.small
                 )
@@ -197,9 +202,10 @@ private fun ChatMessage(message: Message) {
                 Text(
                     text = message.msg,
                     style = typography.bodyLarge,
-                    color = when (message.role) {
-                        Role.Assistant -> colorScheme.onSecondaryContainer
-                        Role.User -> colorScheme.onPrimaryContainer
+                    color = when (message.type) {
+                        Type.User -> colorScheme.onSecondaryContainer
+                        Type.Assistant -> colorScheme.onPrimaryContainer
+                        Type.Error -> colorScheme.onErrorContainer
                     }
                 )
             }

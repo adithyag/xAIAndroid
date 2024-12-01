@@ -32,17 +32,22 @@ class MainScreenViewModel @Inject constructor(
 
     fun onUserMessage(msg: String) {
         val newMessage = Message(
-            role = Role.User,
+            type = Type.User,
             msg = msg,
             images = _images.value,
         )
         _messages.value += newMessage
         viewModelScope.launch {
             _processing.value = true
-            val assistantMessage = llmDomain.chat(
-                _messages.value.map { it.toLlmMessage() }
-            )
-            _messages.value += assistantMessage.toMessage()
+            try {
+                _messages.value += llmDomain.chat(_messages.value.mapNotNull { it.toLlmMessage() })
+                    .toMessage()
+            } catch (e: Exception) {
+                _messages.value += Message(
+                    type = Type.Error,
+                    msg = e.message ?: e.toString(),
+                )
+            }
             _processing.value = false
         }
     }
@@ -67,19 +72,32 @@ class MainScreenViewModel @Inject constructor(
     }
 }
 
+enum class Type {
+    User,
+    Assistant,
+    Error
+}
+
 data class Message(
-    val role: Role,
+    val type: Type,
     val msg: String,
     val images: List<Image> = emptyList(),
 )
 
-private fun Message.toLlmMessage() = LlmMessage(
+private fun Message.toLlmMessage() = if (type == Type.Error) null else LlmMessage(
     msg = msg,
     images = images.map { LlmMessage.Image(it.mimeType, it.base64) },
-    role = role
+    role = when (type) {
+        Type.User -> Role.User
+        Type.Assistant -> Role.Assistant
+        Type.Error -> throw Exception("Error messages cannot be converted to LlmMessage")
+    }
 )
 
-private fun LlmMessage.toMessage() = Message(role = role, msg = msg)
+private fun LlmMessage.toMessage() = Message(
+    type = if (role == Role.Assistant) Type.Assistant else Type.User,
+    msg = msg
+)
 
 data class Image(
     val uri: Uri,

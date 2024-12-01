@@ -39,7 +39,7 @@ fun MainScreenPreview() {
         listOf(
             Message(
                 msg = "How are you?",
-                role = Role.User,
+                type = Type.User,
                 images = listOf(
                     Image(
                         uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
@@ -57,14 +57,16 @@ fun MainScreenPreview() {
                         uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
                         thumbnailPainter = painter!!,
                         mimeType = "image/jpeg",
+
                         base64 = "bleh"
                     ),
                 )
             ),
-            Message(msg = "I'm fine, thank you!", role = Role.Assistant),
-            Message(msg = "Did you not see my images?", role = Role.User),
-            Message(msg = "I thought it was jut my shadow.", role = Role.Assistant),
-            Message(msg = "Great!", role = Role.User),
+            Message(msg = "I'm fine, thank you!", type = Type.Assistant),
+            Message(msg = "Did you not see my images?", type = Type.User),
+            Message(msg = "I thought it was jut my shadow.", type = Type.Assistant),
+            Message(msg = "Great!", type = Type.User),
+            Message(msg = "Client request(POST https://api.x.ai/v1/chat/completions) invalid: 412 Precondition Failed. Text: \"{\"code\":\"The system is not in a state required for the operation's execution\",\"error\":\"Downloaded response does not contain a valid JPG or PNG image.\"}\"", type = Type.Error),
         )
     )
     val onUserMessage: (String) -> Unit = {}
