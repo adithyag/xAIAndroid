@@ -89,13 +89,7 @@ class LlmDomain @Inject constructor(val xAiApi: XAiApi) {
         val msg: String,
         val images: List<Image> = emptyList<Image>(),
         val role: Role = Role.User,
-        val id: Long = Companion.id++,
-        var pending: Boolean = false
     ) {
-        companion object {
-            private var id = 0L
-        }
-
         data class Image(
             val mimeType: String,
             val base64: String,

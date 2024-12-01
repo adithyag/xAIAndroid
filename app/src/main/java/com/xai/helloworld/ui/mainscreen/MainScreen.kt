@@ -52,7 +52,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.xai.helloworld.R
-import com.xai.helloworld.repository.LlmDomain.LlmMessage
 import com.xai.helloworld.repository.LlmDomain.Role
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -74,7 +73,7 @@ private val THUMBNAIL_SIZE = 100.dp
 
 @Composable
 fun MainScreen(
-    messages: StateFlow<List<LlmMessage>>,
+    messages: StateFlow<List<Message>>,
     onUserMessage: (String) -> Unit,
     images: StateFlow<List<Image>>,
     onImageSelected: (Uri?) -> Unit,
@@ -163,7 +162,7 @@ private fun Thumbnail(
 }
 
 @Composable
-private fun ChatMessage(message: LlmMessage) {
+private fun ChatMessage(message: Message) {
     Row {
         val icon = if (message.role == Role.Assistant) R.drawable.grok else R.drawable.user
         val desc = if (message.role == Role.Assistant) "grok icon" else "user icon"
@@ -172,32 +171,47 @@ private fun ChatMessage(message: LlmMessage) {
             contentDescription = desc,
             Modifier.size(24.dp)
         )
-        SelectionContainer {
-            Text(
-                modifier = Modifier
-                    .padding(bottom = 8.dp, start = 8.dp)
-                    .background(
-                        when (message.role) {
-                            Role.Assistant -> colorScheme.primary
-                            Role.User -> {
-                                if (message.pending) colorScheme.tertiary
-                                else colorScheme.background
-                            }
-                        }, shape = shapes.small
-                    )
-                    .padding(4.dp)
-                    .fillMaxWidth(),
-                text = message.msg,
-                style = typography.bodyLarge,
-                color = when (message.role) {
-                    Role.Assistant -> colorScheme.onSecondaryContainer
-                    Role.User -> {
-                        if (message.pending) colorScheme.onTertiary
-                        else colorScheme.onPrimaryContainer
-                    }
+        Column(
+            modifier = Modifier
+                .padding(bottom = 8.dp, start = 8.dp)
+                .background(
+                    when (message.role) {
+                        Role.Assistant -> colorScheme.primary
+                        Role.User -> {
+                            if (message.pending) colorScheme.tertiary
+                            else colorScheme.background
+                        }
+                    }, shape = shapes.small
+                )
+                .padding(4.dp)
+                .fillMaxWidth(),
+        ) {
+            SelectionContainer {
+                Text(
+                    text = message.msg,
+                    style = typography.bodyLarge,
+                    color = when (message.role) {
+                        Role.Assistant -> colorScheme.onSecondaryContainer
+                        Role.User -> {
+                            if (message.pending) colorScheme.onTertiary
+                            else colorScheme.onPrimaryContainer
+                        }
 
+                    }
+                )
+            }
+            if (message.images.isNotEmpty()) {
+                Row {
+                    for (image in message.images) {
+                        Image(
+                            image.thumbnailPainter,
+                            "attached image",
+                            Modifier.size(THUMBNAIL_SIZE),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
-            )
+            }
         }
     }
 }

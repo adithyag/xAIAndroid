@@ -10,7 +10,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.xai.helloworld.R
-import com.xai.helloworld.repository.LlmDomain.LlmMessage
 import com.xai.helloworld.repository.LlmDomain.Role
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -27,14 +26,6 @@ annotation class PreviewS22Ultra
 @PreviewS22Ultra
 @Composable
 fun MainScreenPreview() {
-    val messages = MutableStateFlow<List<LlmMessage>>(
-        listOf(
-            LlmMessage("How are you?", role = Role.User),
-            LlmMessage("I'm fine, thank you!", role = Role.Assistant),
-            LlmMessage("Great!", pending = true),
-        )
-    )
-    val onUserMessage: (String) -> Unit = {}
     val drawable = R.drawable.ic_launcher_foreground
     val painter = ContextCompat.getDrawable(LocalContext.current, drawable)?.let {
         val bitmap =
@@ -44,6 +35,37 @@ fun MainScreenPreview() {
         it.draw(canvas)
         BitmapPainter(bitmap.asImageBitmap())
     }
+    val messages = MutableStateFlow<List<Message>>(
+        listOf(
+            Message(
+                msg = "How are you?",
+                role = Role.User,
+                images = listOf(
+                    Image(
+                        uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
+                        thumbnailPainter = painter!!,
+                        mimeType = "image/jpeg",
+                        base64 = "bleh"
+                    ),
+                    Image(
+                        uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
+                        thumbnailPainter = painter!!,
+                        mimeType = "image/jpeg",
+                        base64 = "bleh"
+                    ),
+                    Image(
+                        uri = Uri.parse("android.resource://com.xai.helloworld/" + R.drawable.ic_launcher_foreground),
+                        thumbnailPainter = painter!!,
+                        mimeType = "image/jpeg",
+                        base64 = "bleh"
+                    ),
+                )
+            ),
+            Message(msg = "I'm fine, thank you!", role = Role.Assistant),
+            Message(msg = "Great!", role = Role.User, pending = true),
+        )
+    )
+    val onUserMessage: (String) -> Unit = {}
     val images = MutableStateFlow<List<Image>>(
         listOf(
             Image(
