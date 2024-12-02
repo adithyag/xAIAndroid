@@ -20,7 +20,7 @@ fun getApiKey(): String {
 }
 
 android {
-    namespace = "com.xai.helloworld"
+    namespace = "com.adithyag.xai"
     compileSdk = 34
 
     buildFeatures {
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.xai.helloworld"
+        applicationId = "com.adithyag.xai"
         minSdk = 34
         //noinspection OldTargetApi
         targetSdk = 34
