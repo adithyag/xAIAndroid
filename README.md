@@ -19,25 +19,25 @@ We have currently four personas you can interact with. Use the Settings icon to 
 
 Use the Settings icon (gear) on the right to swap personas for xAI. Swapping will delete the current chat to set a fresh context.
 
-<img src="Screenshots/Persona_Choice.png" width="50%">
+<img src="Screenshots/Persona_Choice.png" width="100%">
 
 ## Ollie Williams
 
 This provides the most succinct persona that is very helpful when you need a series of quick direct answers.
 
-<img src="Screenshots/OllieWilliams.png" width="50%">
+<img src="Screenshots/OllieWilliams.png" width="100%">
 
 ## Hotdog Not Hotdog
 
 This is inspired by the HBO series Silicon Valley.
 
-<img src="Screenshots/HotdogNotHotdog.png" width="50%">
+<img src="Screenshots/HotdogNotHotdog.png" width="100%">
 
 ## GLaDOS
 
 This provides a humorous responses inspired by the character from Portal series of games from Valve
 
-<img src="Screenshots/GLaDOS.png" width="50%">
+<img src="Screenshots/GLaDOS.png" width="100%">
 
 # Building
 
