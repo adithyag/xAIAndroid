@@ -16,14 +16,9 @@ internal const val MODEL_VISION = "grok-vision-beta"
 @Singleton
 class LlmDomain @Inject constructor(val xAiApi: XAiApi) {
 
-    private val systemMessage = Message.Text(
-        role = MessageRole.SYSTEM,
-        content = "You are Grok, a helpful assistant."
-    )
-
-    internal suspend fun chat(messages: List<LlmMessage>): LlmMessage {
+    internal suspend fun chat(systemMessage: String, messages: List<LlmMessage>): LlmMessage {
         val messageList = buildList<Message> {
-            add(systemMessage)
+            add(Message.Text(MessageRole.SYSTEM, systemMessage))
             if (messages.size > 1) {
                 messages.subList(0, size - 1).forEach { message ->
                     add(message.toTextMessage())

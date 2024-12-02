@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.xai.helloworld.R
+import com.xai.helloworld.repository.Personas
 import com.xai.helloworld.ui.PreviewS22Ultra
 import com.xai.helloworld.ui.theme.XAIHelloWorldTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,6 +79,8 @@ fun MainScreenPreview() {
             onUserMessage = onUserMessage,
             images = images,
             processing = MutableStateFlow(true),
+            persona = MutableStateFlow(Personas.DEFAULT),
+            onPersonaSelected = {},
             onImageSelected = onImageSelected,
             onImageDeleted = onImageDeleted,
             onInfoClick = {},

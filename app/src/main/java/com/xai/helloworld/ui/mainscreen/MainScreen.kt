@@ -1,6 +1,7 @@
 package com.xai.helloworld.ui.mainscreen
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -24,6 +25,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -55,6 +57,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.xai.helloworld.R
+import com.xai.helloworld.repository.Persona
 import com.xai.helloworld.ui.PreviewS22Ultra
 import com.xai.helloworld.ui.theme.Dimensions
 import com.xai.helloworld.ui.theme.Dimensions.AppMargin
@@ -70,6 +73,8 @@ internal fun MainScreen(viewModel: MainScreenViewModel, onInfoClicked: () -> Uni
         viewModel::onUserMessage,
         viewModel.images,
         viewModel.processing,
+        viewModel.persona,
+        viewModel::onPersonaSelected,
         viewModel::onImageAdded,
         viewModel::onImageRemoved,
         onInfoClicked,
@@ -82,6 +87,8 @@ fun MainScreen(
     onUserMessage: (String) -> Unit,
     images: StateFlow<List<Image>>,
     processing: StateFlow<Boolean>,
+    persona: StateFlow<Persona>,
+    onPersonaSelected: (Persona) -> Unit,
     onImageSelected: (Uri?) -> Unit,
     onImageDeleted: (Image) -> Unit,
     onInfoClick: () -> Unit,
@@ -103,6 +110,7 @@ fun MainScreen(
             val messages by messages.collectAsState()
             val images by images.collectAsState()
             val hasImages by remember { derivedStateOf { images.isNotEmpty() } }
+            val persona by persona.collectAsState()
             LazyColumn(
                 Modifier
                     .fillMaxSize()
@@ -115,7 +123,7 @@ fun MainScreen(
                 reverseLayout = true,
             ) {
                 if (processing.value) {
-                    item { ProcessingIndicator() }
+                    item { ProcessingIndicator(persona) }
                 }
                 if (hasImages) {
                     item {
@@ -127,7 +135,7 @@ fun MainScreen(
                     }
                 }
                 items(messages.asReversed()) {
-                    ChatMessage(it)
+                    ChatMessage(it, persona)
                 }
             }
             if (hasImages) {
@@ -138,22 +146,53 @@ fun MainScreen(
                 }
             }
 
-            IconButton(
-                onClick = onInfoClick,
-                Modifier.align(Alignment.TopEnd),
-                enabled = true,
-            ) {
-                Icon(
-                    Icons.Filled.Info,
-                    "info",
-                    Modifier.size(Dimensions.IconButton),
-                    colorScheme.onPrimary,
-                )
+            Row(Modifier.align(Alignment.TopEnd)) {
+                SettingsButton(persona, onPersonaSelected)
+                InfoButton(onInfoClick)
             }
         }
         ChatInput(onUserMessage) {
             launcher.launch(jpegRequest)
         }
+    }
+}
+
+@Composable
+fun SettingsButton(currentPersona: Persona, onPersonaSelected: (Persona) -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = { showDialog = true },
+    ) {
+        Icon(
+            Icons.Filled.Settings,
+            "Settings",
+            Modifier.size(Dimensions.IconButton),
+            colorScheme.onPrimary,
+        )
+    }
+    if (showDialog) {
+        PersonaChoiceDialog(
+            selectedPersona = currentPersona,
+            onDismiss = { showDialog = false },
+            onPersonaSelected = {
+                Log.d("Settings", "Selected persona: ${it}")
+                onPersonaSelected(it)
+            }
+        )
+    }
+}
+
+@Composable
+fun InfoButton(onInfoClick: () -> Unit) {
+    IconButton(
+        onClick = onInfoClick,
+    ) {
+        Icon(
+            Icons.Filled.Info,
+            "info",
+            Modifier.size(Dimensions.IconButton),
+            colorScheme.onPrimary,
+        )
     }
 }
 
@@ -183,14 +222,14 @@ private fun Thumbnail(
 }
 
 @Composable
-private fun ChatMessage(message: Message) {
+private fun ChatMessage(message: Message, persona: Persona) {
     Row {
         val icon = when (message.type) {
-            Type.Assistant -> R.drawable.grok
+            Type.Assistant -> persona.vectorDrawableId
             Type.User -> R.drawable.user
             Type.Error -> R.drawable.ic_computer
         }
-        val desc = if (message.type == Type.Assistant) "grok icon" else "user icon"
+        val desc = if (message.type == Type.Assistant) "${persona.name} icon" else "user icon"
         Image(
             ImageVector.vectorResource(icon),
             contentDescription = desc,
@@ -309,7 +348,7 @@ fun SendIcons(enabled: Boolean, onSend: () -> Unit, onImageClick: () -> Unit) {
 }
 
 @Composable
-fun ProcessingIndicator() {
+fun ProcessingIndicator(persona: Persona) {
     // Create a state to hold the rotation value
     var rotation by remember { mutableStateOf(0f) }
 
@@ -327,12 +366,12 @@ fun ProcessingIndicator() {
 
     // Display the rotating image
     Image(
-        painter = painterResource(id = R.drawable.grok), // Replace with your image resource
-        contentDescription = "Rotating Image",
+        painter = painterResource(id = persona.vectorDrawableId),
+        contentDescription = "Rotating processing indicator",
         modifier = Modifier
             .padding(bottom = AppMargin)
             .size(Dimensions.SmallIcon)
-            .graphicsLayer(rotationZ = rotation) // Apply rotation to the image
+            .graphicsLayer(rotationZ = rotation)
     )
 }
 

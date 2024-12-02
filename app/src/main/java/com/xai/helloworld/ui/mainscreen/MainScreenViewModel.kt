@@ -10,6 +10,8 @@ import com.xai.helloworld.repository.ImageRepository
 import com.xai.helloworld.repository.LlmDomain
 import com.xai.helloworld.repository.LlmDomain.LlmMessage
 import com.xai.helloworld.repository.LlmDomain.Role
+import com.xai.helloworld.repository.Persona
+import com.xai.helloworld.repository.Personas
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +33,9 @@ class MainScreenViewModel @Inject constructor(
     private val _processing = MutableStateFlow(false)
     internal var processing = _processing.asStateFlow()
 
+    private val _persona = MutableStateFlow<Persona>(Personas.DEFAULT)
+    internal var persona = _persona.asStateFlow()
+
     fun onUserMessage(msg: String) {
         val newMessage = Message(
             type = Type.User,
@@ -41,7 +46,10 @@ class MainScreenViewModel @Inject constructor(
         viewModelScope.launch {
             _processing.value = true
             try {
-                _messages.value += llmDomain.chat(_messages.value.mapNotNull { it.toLlmMessage() })
+                _messages.value += llmDomain.chat(
+                    _persona.value.systemMessage,
+                    _messages.value.mapNotNull { it.toLlmMessage() }
+                )
                     .toMessage()
             } catch (e: Exception) {
                 _messages.value += Message(
@@ -65,6 +73,14 @@ class MainScreenViewModel @Inject constructor(
                     base64 = imageRepository.getBase64EncodedData(uri)
                 )
             }
+        }
+    }
+
+    fun onPersonaSelected(persona: Persona) {
+        if (persona != _persona.value) {
+            _persona.value = persona
+            _messages.value = emptyList()
+            _images.value = emptyList()
         }
     }
 
