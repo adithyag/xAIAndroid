@@ -1,4 +1,4 @@
-# Broken stuff
+# Known Issues with XAI backend
 
 * The response object documentation is missing for all APIs.
 
@@ -26,3 +26,4 @@ https://docs.x.ai/api/endpoints#list-models
 ## v1/chat/completions
 https://docs.x.ai/api/endpoints#chat-completions
 * `reponse_format` and `stream_options` are not documented
+* Some images messages return an error `412 Precondition Failed`. They are not documented but experimentation shows that images need to be smaller - maybe < 1000x1000. The server doesn't auto resize yet.
