@@ -13,6 +13,10 @@ import javax.inject.Singleton
 internal const val MODEL_DEFAULT = "grok-beta"
 internal const val MODEL_VISION = "grok-vision-beta"
 
+private const val SYSTEM_MESSAGE_AUTOCOMPLETE =
+    "You are an auto complete service. Only provide one autocomplete response only"
+private const val COUNT_SUGGESTIONS = 5
+
 @Singleton
 class LlmDomain @Inject constructor(val xAiApi: XAiApi) {
 
@@ -41,6 +45,21 @@ class LlmDomain @Inject constructor(val xAiApi: XAiApi) {
             response.choices.first().message.content.toString(),
             role = Role.Assistant
         )
+    }
+
+    internal suspend fun autocomplete(input: String): List<String> {
+        val messageList = buildList<Message> {
+            add(Message.Text(MessageRole.SYSTEM, SYSTEM_MESSAGE_AUTOCOMPLETE))
+            add(Message.Text(MessageRole.USER, input))
+        }
+        val request = ChatCompletionsRequest(
+            messages = messageList,
+            model = MODEL_DEFAULT,
+            n = COUNT_SUGGESTIONS,
+        )
+        val response = xAiApi.getChatCompletions(request)
+        return response.choices.map { it.message.content.toString() }
+
     }
 
     private fun LlmMessage.toTextMessage() = Message.Text(

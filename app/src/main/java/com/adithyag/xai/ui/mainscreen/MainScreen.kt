@@ -229,57 +229,57 @@ private fun Thumbnail(
 @Composable
 private fun ChatMessage(message: Message, persona: Persona) {
 
-        Row {
-            val icon = when (message.type) {
-                Type.Assistant -> persona.vectorDrawableId
-                Type.User -> R.drawable.user
-                Type.Error -> R.drawable.ic_computer
+    Row {
+        val icon = when (message.type) {
+            Type.Assistant -> persona.vectorDrawableId
+            Type.User -> R.drawable.user
+            Type.Error -> R.drawable.ic_computer
+        }
+        val desc = if (message.type == Type.Assistant) "${persona.name} icon" else "user icon"
+        Image(
+            ImageVector.vectorResource(icon),
+            contentDescription = desc,
+            Modifier.size(Dimensions.SmallIcon)
+        )
+        Column(
+            modifier = Modifier
+                .padding(bottom = Dimensions.RowItemPadding, start = Dimensions.RowItemPadding)
+                .background(
+                    when (message.type) {
+                        Type.User -> Color.Transparent
+                        Type.Assistant -> colorScheme.primary
+                        Type.Error -> colorScheme.errorContainer
+                    },
+                    shape = shapes.small
+                )
+                .padding(Dimensions.ContainerInset)
+                .fillMaxWidth(),
+        ) {
+            SelectionContainer {
+                Text(
+                    text = message.msg,
+                    style = typography.bodyLarge,
+                    color = when (message.type) {
+                        Type.User -> colorScheme.onSecondaryContainer
+                        Type.Assistant -> colorScheme.onPrimaryContainer
+                        Type.Error -> colorScheme.onErrorContainer
+                    }
+                )
             }
-            val desc = if (message.type == Type.Assistant) "${persona.name} icon" else "user icon"
-            Image(
-                ImageVector.vectorResource(icon),
-                contentDescription = desc,
-                Modifier.size(Dimensions.SmallIcon)
-            )
-            Column(
-                modifier = Modifier
-                    .padding(bottom = Dimensions.RowItemPadding, start = Dimensions.RowItemPadding)
-                    .background(
-                        when (message.type) {
-                            Type.User -> Color.Transparent
-                            Type.Assistant -> colorScheme.primary
-                            Type.Error -> colorScheme.errorContainer
-                        },
-                        shape = shapes.small
-                    )
-                    .padding(Dimensions.ContainerInset)
-                    .fillMaxWidth(),
-            ) {
-                SelectionContainer {
-                    Text(
-                        text = message.msg,
-                        style = typography.bodyLarge,
-                        color = when (message.type) {
-                            Type.User -> colorScheme.onSecondaryContainer
-                            Type.Assistant -> colorScheme.onPrimaryContainer
-                            Type.Error -> colorScheme.onErrorContainer
-                        }
-                    )
-                }
-                if (message.images.isNotEmpty()) {
-                    Row {
-                        for (image in message.images) {
-                            Image(
-                                image.thumbnailPainter,
-                                "attached image",
-                                Modifier.size(Dimensions.ThumbnailSize),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+            if (message.images.isNotEmpty()) {
+                Row {
+                    for (image in message.images) {
+                        Image(
+                            image.thumbnailPainter,
+                            "attached image",
+                            Modifier.size(Dimensions.ThumbnailSize),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
             }
         }
+    }
 
 
 }
@@ -294,12 +294,17 @@ private fun ChatInput(
 ) {
     val currentUserInput by currentUserInput.collectAsState()
     val currentSuggestions by inputSuggestions.collectAsState()
+
     Column {
         for (suggestion in currentSuggestions) {
             Text(
                 text = suggestion,
                 color = colorScheme.onSecondaryContainer,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier
+                    .padding(AppMargin)
+                    .clickable {
+                        onUserMessage(suggestion)
+                    },
             )
         }
         Row(
