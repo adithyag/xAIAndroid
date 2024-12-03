@@ -2,6 +2,10 @@ package com.adithyag.xai.ui.mainscreen
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.ViewModel
@@ -36,12 +40,20 @@ class MainScreenViewModel @Inject constructor(
     private val _persona = MutableStateFlow<Persona>(Personas.DEFAULT)
     internal var persona = _persona.asStateFlow()
 
+    private val _currentUserInput = MutableStateFlow<String>("")
+    internal var currentUserInput = _currentUserInput.asStateFlow()
+
+    private val _inputSuggestions = MutableStateFlow<List<String>>(emptyList<String>())
+    internal val inputSuggestions = _inputSuggestions.asStateFlow()
+
     fun onUserMessage(msg: String) {
         val newMessage = Message(
             type = Type.User,
             msg = msg,
             images = _images.value,
         )
+        _currentUserInput.value = ""
+        _inputSuggestions.value = emptyList()
         _messages.value += newMessage
         viewModelScope.launch {
             _processing.value = true
@@ -58,6 +70,24 @@ class MainScreenViewModel @Inject constructor(
                 )
             }
             _processing.value = false
+        }
+    }
+
+    fun onUserInput(input: String) {
+        _currentUserInput.value = input
+        viewModelScope.launch {
+            try {
+                _messages.value += llmDomain.chat(
+                    "please provide text auto complete suggestion",
+                    listOf(LlmMessage(input))
+                )
+                    .toMessage()
+            } catch (e: Exception) {
+                _messages.value += Message(
+                    type = Type.Error,
+                    msg = e.message ?: e.toString(),
+                )
+            }
         }
     }
 

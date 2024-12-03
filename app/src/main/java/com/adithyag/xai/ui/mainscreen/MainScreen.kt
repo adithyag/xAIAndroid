@@ -43,7 +43,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +74,9 @@ internal fun MainScreen(viewModel: MainScreenViewModel, onInfoClicked: () -> Uni
         viewModel.processing,
         viewModel.persona,
         viewModel::onPersonaSelected,
+        viewModel.currentUserInput,
+        viewModel::onUserInput,
+        viewModel.inputSuggestions,
         viewModel::onImageAdded,
         viewModel::onImageRemoved,
         onInfoClicked,
@@ -89,6 +91,9 @@ fun MainScreen(
     processing: StateFlow<Boolean>,
     persona: StateFlow<Persona>,
     onPersonaSelected: (Persona) -> Unit,
+    currentUserInput: StateFlow<String>,
+    onUserInput: (String) -> Unit,
+    inputSuggestions: StateFlow<List<String>>,
     onImageSelected: (Uri?) -> Unit,
     onImageDeleted: (Image) -> Unit,
     onInfoClick: () -> Unit,
@@ -151,7 +156,7 @@ fun MainScreen(
                 InfoButton(onInfoClick)
             }
         }
-        ChatInput(onUserMessage) {
+        ChatInput(currentUserInput, onUserInput, inputSuggestions, onUserMessage) {
             launcher.launch(jpegRequest)
         }
     }
@@ -223,98 +228,116 @@ private fun Thumbnail(
 
 @Composable
 private fun ChatMessage(message: Message, persona: Persona) {
-    Row {
-        val icon = when (message.type) {
-            Type.Assistant -> persona.vectorDrawableId
-            Type.User -> R.drawable.user
-            Type.Error -> R.drawable.ic_computer
-        }
-        val desc = if (message.type == Type.Assistant) "${persona.name} icon" else "user icon"
-        Image(
-            ImageVector.vectorResource(icon),
-            contentDescription = desc,
-            Modifier.size(Dimensions.SmallIcon)
-        )
-        Column(
-            modifier = Modifier
-                .padding(bottom = Dimensions.RowItemPadding, start = Dimensions.RowItemPadding)
-                .background(
-                    when (message.type) {
-                        Type.User -> Color.Transparent
-                        Type.Assistant -> colorScheme.primary
-                        Type.Error -> colorScheme.errorContainer
-                    },
-                    shape = shapes.small
-                )
-                .padding(Dimensions.ContainerInset)
-                .fillMaxWidth(),
-        ) {
-            SelectionContainer {
-                Text(
-                    text = message.msg,
-                    style = typography.bodyLarge,
-                    color = when (message.type) {
-                        Type.User -> colorScheme.onSecondaryContainer
-                        Type.Assistant -> colorScheme.onPrimaryContainer
-                        Type.Error -> colorScheme.onErrorContainer
-                    }
-                )
+
+        Row {
+            val icon = when (message.type) {
+                Type.Assistant -> persona.vectorDrawableId
+                Type.User -> R.drawable.user
+                Type.Error -> R.drawable.ic_computer
             }
-            if (message.images.isNotEmpty()) {
-                Row {
-                    for (image in message.images) {
-                        Image(
-                            image.thumbnailPainter,
-                            "attached image",
-                            Modifier.size(Dimensions.ThumbnailSize),
-                            contentScale = ContentScale.Crop
-                        )
+            val desc = if (message.type == Type.Assistant) "${persona.name} icon" else "user icon"
+            Image(
+                ImageVector.vectorResource(icon),
+                contentDescription = desc,
+                Modifier.size(Dimensions.SmallIcon)
+            )
+            Column(
+                modifier = Modifier
+                    .padding(bottom = Dimensions.RowItemPadding, start = Dimensions.RowItemPadding)
+                    .background(
+                        when (message.type) {
+                            Type.User -> Color.Transparent
+                            Type.Assistant -> colorScheme.primary
+                            Type.Error -> colorScheme.errorContainer
+                        },
+                        shape = shapes.small
+                    )
+                    .padding(Dimensions.ContainerInset)
+                    .fillMaxWidth(),
+            ) {
+                SelectionContainer {
+                    Text(
+                        text = message.msg,
+                        style = typography.bodyLarge,
+                        color = when (message.type) {
+                            Type.User -> colorScheme.onSecondaryContainer
+                            Type.Assistant -> colorScheme.onPrimaryContainer
+                            Type.Error -> colorScheme.onErrorContainer
+                        }
+                    )
+                }
+                if (message.images.isNotEmpty()) {
+                    Row {
+                        for (image in message.images) {
+                            Image(
+                                image.thumbnailPainter,
+                                "attached image",
+                                Modifier.size(Dimensions.ThumbnailSize),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                 }
             }
         }
-    }
+
+
 }
 
 @Composable
-private fun ChatInput(onUserMessage: (String) -> Unit, onImageClick: () -> Unit) {
-    var currentUserInput by rememberSaveable { mutableStateOf("") }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OutlinedTextField(
-            modifier = Modifier.weight(1f),
-            placeholder = @Composable {
-                Text(
-                    text = "Ask xAI anything",
-                    color = colorScheme.inverseOnSurface,
-                    style = typography.titleLarge,
-                )
-            },
-            value = currentUserInput,
-            trailingIcon = @Composable {
-                SendIcons(
-                    currentUserInput.isNotBlank(),
-                    onSend = {
-                        onUserMessage(currentUserInput)
-                        currentUserInput = ""
-                    },
-                    onImageClick = onImageClick
-                )
-            },
-            onValueChange = { currentUserInput = it },
-            colors = TextFieldDefaults.colors().copy(
-                focusedContainerColor = colorScheme.primary,
-                unfocusedContainerColor = colorScheme.primary,
-                cursorColor = colorScheme.onPrimary,
-            ),
-            shape = shapes.small,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Send,
-                keyboardType = KeyboardType.Text,
+private fun ChatInput(
+    currentUserInput: StateFlow<String>,
+    onUserInput: (String) -> Unit,
+    inputSuggestions: StateFlow<List<String>>,
+    onUserMessage: (String) -> Unit,
+    onImageClick: () -> Unit
+) {
+    val currentUserInput by currentUserInput.collectAsState()
+    val currentSuggestions by inputSuggestions.collectAsState()
+    Column {
+        for (suggestion in currentSuggestions) {
+            Text(
+                text = suggestion,
+                color = colorScheme.onSecondaryContainer,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-        )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.weight(1f),
+                placeholder = @Composable {
+                    Text(
+                        text = "Ask xAI anything",
+                        color = colorScheme.inverseOnSurface,
+                        style = typography.titleLarge,
+                    )
+                },
+                value = currentUserInput,
+                trailingIcon = @Composable {
+                    SendIcons(
+                        currentUserInput.isNotBlank(),
+                        onSend = {
+                            onUserMessage(currentUserInput)
+                        },
+                        onImageClick = onImageClick
+                    )
+                },
+                onValueChange = onUserInput,
+                colors = TextFieldDefaults.colors().copy(
+                    focusedContainerColor = colorScheme.primary,
+                    unfocusedContainerColor = colorScheme.primary,
+                    cursorColor = colorScheme.onPrimary,
+                ),
+                shape = shapes.small,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Send,
+                    keyboardType = KeyboardType.Text,
+                )
+            )
+        }
     }
 }
 
